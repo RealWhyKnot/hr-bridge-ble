@@ -122,10 +122,9 @@ jobs:
             ForEach-Object { $_ -replace ' \(\d{4}\.\d+\.\d+\.\d+(-([A-Fa-f0-9]{4}|beta))?\)', '' }
           if (-not $subjects) { $subjects = @('- Maintenance release') }
           $zipName = '${{ steps.package.outputs.name }}'
-          $body = @(
-            "## Changes",
-            "",
-            $subjects,
+          $lines = @('## Changes', '')
+          $lines += @($subjects)
+          $lines += @(
             "",
             "## Downloads",
             "",
@@ -133,7 +132,8 @@ jobs:
             "- The ``.whl`` and ``.tar.gz`` are for macOS and Linux: ``pipx install <url of the wheel>``.",
             "- SHA256 of the zip: ``${{ steps.package.outputs.sha256 }}``",
             "- Hashes for every file are in the attached ``.integrity.tsv``."
-          ) -join "`n"
+          )
+          $body = $lines -join "`n"
           $path = Join-Path $env:RUNNER_TEMP 'release-notes.md'
           [System.IO.File]::WriteAllText($path, $body, [System.Text.UTF8Encoding]::new($false))
           "path=$path" >> $env:GITHUB_OUTPUT
