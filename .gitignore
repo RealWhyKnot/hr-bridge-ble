@@ -13,3 +13,4 @@ version.txt
 .DS_Store
 Thumbs.db
 *.spec
+/start-hidden.vbs

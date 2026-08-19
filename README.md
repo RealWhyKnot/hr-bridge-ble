@@ -123,8 +123,9 @@ The log is written to `bridge.log` under your platform's data directory:
 Templates for all three platforms are in `packaging/`, and in the `autostart`
 folder of the release zip.
 
-**Windows.** Keep `start-hidden.vbs` in the same folder as `hr-bridge-ble.exe`,
-then put a shortcut to it in the Startup folder. Press Win+R and enter
+**Windows.** Copy `start-hidden.vbs` into the folder that holds
+`hr-bridge-ble.exe`, or the folder that holds `.venv` if you installed from a
+clone, then put a shortcut to it in the Startup folder. Press Win+R and enter
 `shell:startup` to open that folder. The script works out its own location, so
 you can move the folder later without breaking it.
 
