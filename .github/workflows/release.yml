@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release, for example v2026.8.19.0 or v2026.8.19.0-beta'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Resolve release tag
+        id: release_tag
+        shell: pwsh
+        run: |
+          $tag = '${{ github.event.inputs.tag }}'
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+            $tag = '${{ github.ref_name }}'
+          }
+          if ($tag -notmatch '^v\d{4}\.\d+\.\d+\.\d+(-([A-Fa-f0-9]{4}|beta))?$') {
+            throw "tag '$tag' does not match vYYYY.M.D.N, vYYYY.M.D.N-XXXX, or vYYYY.M.D.N-beta."
+          }
+          git rev-parse --verify --quiet "refs/tags/$tag^{commit}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            throw "tag '$tag' does not exist in the checked-out repository."
+          }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Detect beta tag
+        id: beta
+        shell: pwsh
+        run: |
+          $isBeta = '${{ steps.release_tag.outputs.tag }}' -match '^v\d{4}\.\d+\.\d+\.\d+-beta$'
+          "is_beta=$($isBeta.ToString().ToLower())" >> $env:GITHUB_OUTPUT
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ruff build pyinstaller
+          python -m pip install -e .
+
+      - name: Stamp the version
+        id: stamp
+        shell: pwsh
+        run: |
+          $version = '${{ steps.release_tag.outputs.tag }}' -replace '^v', ''
+          $pep = $version -replace '-beta$', 'b0'
+          $pep = $pep -replace '-([A-Fa-f0-9]{4})$', '+$1'
+          $init = 'src/hr_bridge_ble/__init__.py'
+          [System.IO.File]::WriteAllText($init, "__version__ = `"$pep`"`n", [System.Text.UTF8Encoding]::new($false))
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Validate
+        run: |
+          python -m ruff format --check .
+          python -m ruff check .
+          python -m unittest discover
+
+      - name: Build the Windows executable
+        run: pyinstaller --onefile --clean --noconfirm --name hr-bridge-ble --paths src --distpath dist/exe packaging/entry.py
+
+      - name: Build the source and wheel distributions
+        run: python -m build --outdir dist/python
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $version = '${{ steps.stamp.outputs.version }}'
+          $stage = "dist/stage/hr-bridge-ble-$version"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Copy-Item dist/exe/hr-bridge-ble.exe $stage
+          Copy-Item README.md, LICENSE $stage
+          Copy-Item -Recurse packaging (Join-Path $stage 'autostart')
+          Remove-Item (Join-Path $stage 'autostart/entry.py')
+          $zip = "dist/hr-bridge-ble-$version.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          $lines = @("$hash`t$((Get-Item $zip).Length)`t$(Split-Path $zip -Leaf)")
+          foreach ($file in Get-ChildItem dist/python) {
+            $lines += "$((Get-FileHash $file.FullName -Algorithm SHA256).Hash)`t$($file.Length)`t$($file.Name)"
+          }
+          $integrity = "dist/hr-bridge-ble-$version.integrity.tsv"
+          [System.IO.File]::WriteAllLines($integrity, [string[]]$lines, [System.Text.UTF8Encoding]::new($false))
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+          "name=$(Split-Path $zip -Leaf)" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+          "integrity=$integrity" >> $env:GITHUB_OUTPUT
+
+      - name: Build release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.release_tag.outputs.tag }}'
+          $prev = & git describe --tags --abbrev=0 --exclude '*-*' "$tag^" 2>$null
+          $range = if ($LASTEXITCODE -eq 0 -and $prev) { "$prev..$tag" } else { $tag }
+          $subjects = git log --no-merges --format='- %s (%h)' $range |
+            Where-Object { $_ -notmatch '\[skip changelog\]' } |
+            ForEach-Object { $_ -replace ' \(\d{4}\.\d+\.\d+\.\d+(-([A-Fa-f0-9]{4}|beta))?\)', '' }
+          if (-not $subjects) { $subjects = @('- Maintenance release') }
+          $zipName = '${{ steps.package.outputs.name }}'
+          $body = @(
+            "## Changes",
+            "",
+            $subjects,
+            "",
+            "## Downloads",
+            "",
+            "- ``$zipName`` holds the Windows executable and the autostart templates. No Python needed.",
+            "- The ``.whl`` and ``.tar.gz`` are for macOS and Linux: ``pipx install <url of the wheel>``.",
+            "- SHA256 of the zip: ``${{ steps.package.outputs.sha256 }}``",
+            "- Hashes for every file are in the attached ``.integrity.tsv``."
+          ) -join "`n"
+          $path = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          [System.IO.File]::WriteAllText($path, $body, [System.Text.UTF8Encoding]::new($false))
+          "path=$path" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $assets = @('${{ steps.package.outputs.zip }}', '${{ steps.package.outputs.integrity }}')
+          $assets += (Get-ChildItem dist/python | ForEach-Object { $_.FullName })
+          $extra = @()
+          if ('${{ steps.beta.outputs.is_beta }}' -eq 'true') { $extra = @('--prerelease', '--latest=false') }
+          gh release create '${{ steps.release_tag.outputs.tag }}' @assets --title '${{ steps.release_tag.outputs.tag }}' --notes-file '${{ steps.notes.outputs.path }}' @extra

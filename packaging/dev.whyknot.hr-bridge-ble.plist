@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Install: cp dev.whyknot.hr-bridge-ble.plist ~/Library/LaunchAgents/ -->
+<!-- Then: launchctl load ~/Library/LaunchAgents/dev.whyknot.hr-bridge-ble.plist -->
+<!-- Replace USERNAME with your account name. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>dev.whyknot.hr-bridge-ble</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/USERNAME/.local/bin/hr-bridge-ble</string>
+    <string>--quiet</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+</dict>
+</plist>

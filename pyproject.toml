@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hr-bridge-ble"
+dynamic = ["version"]
+description = "Relay heart rate from a Bluetooth chest strap to hr-osc using the host's own adapter"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "RealWhyKnot" }]
+keywords = ["heart rate", "bluetooth", "ble", "vrchat", "osc", "hr-osc"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia",
+]
+dependencies = ["bleak>=0.22,<4"]
+
+[project.urls]
+Homepage = "https://github.com/RealWhyKnot/hr-bridge-ble"
+Issues = "https://github.com/RealWhyKnot/hr-bridge-ble/issues"
+
+[project.scripts]
+hr-bridge-ble = "hr_bridge_ble.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "hr_bridge_ble.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+exclude = [".git", ".ruff_cache", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

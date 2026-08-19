@@ -1,0 +1,28 @@
+name: Bug report
+description: Something does not work
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Windows 11 24H2 / macOS 15.2 / Fedora 41
+    validations:
+      required: true
+  - type: input
+    id: strap
+    attributes:
+      label: Heart rate strap
+      placeholder: CooSpo H6 / Polar H10 / Garmin HRM-Dual
+  - type: input
+  - type: textarea
+    id: log
+    attributes:
+      label: Log output
+      description: The contents of bridge.log, or the console output.
+      render: text

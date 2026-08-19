@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.vbs text eol=crlf
+*.plist text eol=lf
+*.png binary
+*.uf2 binary

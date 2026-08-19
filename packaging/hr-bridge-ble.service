@@ -1,0 +1,13 @@
+# Install as a user service: cp hr-bridge-ble.service ~/.config/systemd/user/
+# Then: systemctl --user enable --now hr-bridge-ble
+[Unit]
+Description=hr-bridge-ble
+After=bluetooth.target
+
+[Service]
+ExecStart=%h/.local/bin/hr-bridge-ble --quiet
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
