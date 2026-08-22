@@ -123,11 +123,14 @@ The log is written to `bridge.log` under your platform's data directory:
 Templates for all three platforms are in `packaging/`, and in the `autostart`
 folder of the release zip.
 
-**Windows.** Copy `start-hidden.vbs` into the folder that holds
-`hr-bridge-ble.exe`, or the folder that holds `.venv` if you installed from a
-clone, then put a shortcut to it in the Startup folder. Press Win+R and enter
-`shell:startup` to open that folder. The script works out its own location, so
-you can move the folder later without breaking it.
+**Windows.** Put a shortcut to `start-hidden.vbs` in the Startup folder. Press
+Win+R and enter `shell:startup` to open it. In the release zip the script is in
+`autostart`, one folder below `hr-bridge-ble.exe`; in a clone it is in
+`packaging`, one folder below the `.venv`. It finds either without being moved.
+
+Moving the folder afterwards does break the logon start: the shortcut records the
+old path, and so does an editable install. Re-create the shortcut, and from a
+clone re-run `pip install -e .`.
 
 **macOS.** Edit `dev.whyknot.hr-bridge-ble.plist` to replace `USERNAME`, then:
 
