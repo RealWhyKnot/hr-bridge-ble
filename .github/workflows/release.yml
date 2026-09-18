@@ -80,17 +80,16 @@ jobs:
           Remove-Item (Join-Path $stage 'autostart/entry.py')
           $zip = "dist/hr-bridge-ble-$version.zip"
           Compress-Archive -Path "$stage/*" -DestinationPath $zip -Force
-          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
-          $lines = @("$hash`t$((Get-Item $zip).Length)`t$(Split-Path $zip -Leaf)")
-          foreach ($file in Get-ChildItem dist/python) {
-            $lines += "$((Get-FileHash $file.FullName -Algorithm SHA256).Hash)`t$($file.Length)`t$($file.Name)"
-          }
-          $integrity = "dist/hr-bridge-ble-$version.integrity.tsv"
-          [System.IO.File]::WriteAllLines($integrity, [string[]]$lines, [System.Text.UTF8Encoding]::new($false))
           "zip=$zip" >> $env:GITHUB_OUTPUT
           "name=$(Split-Path $zip -Leaf)" >> $env:GITHUB_OUTPUT
-          "sha256=$hash" >> $env:GITHUB_OUTPUT
-          "integrity=$integrity" >> $env:GITHUB_OUTPUT
+          "integrity=dist/hr-bridge-ble-$version.integrity.tsv" >> $env:GITHUB_OUTPUT
+
+      - name: Checksums
+        id: checksums
+        uses: RealWhyKnot/workflows/checksums@v1
+        with:
+          archives: ${{ steps.package.outputs.zip }}
+          contents: dist/python
 
       - name: Build release notes
         id: notes
@@ -103,7 +102,7 @@ jobs:
 
             - `${{ steps.package.outputs.name }}` holds the Windows executable and the autostart templates. No Python needed.
             - The `.whl` and `.tar.gz` are for macOS and Linux: `pipx install <url of the wheel>`.
-            - SHA256 of the zip: `${{ steps.package.outputs.sha256 }}`
+            - SHA256 of the zip: `${{ steps.checksums.outputs.sha256 }}`
             - Hashes for every file are in the attached `.integrity.tsv`.
 
       - name: Create GitHub release
