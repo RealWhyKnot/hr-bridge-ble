@@ -38,7 +38,7 @@ change needs context that the subject cannot carry.
 
 Tag `vYYYY.M.D.N` and push the tag. The release workflow validates the tag,
 runs the checks, builds the Windows executable and the Python distributions,
-and publishes them with notes generated from the commit subjects since the last
+and publishes them with notes built from the commit subjects since the last
 release.
 
 ```bash
