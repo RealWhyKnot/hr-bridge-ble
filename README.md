@@ -8,7 +8,7 @@ already has. It connects to the chest strap directly and forwards each reading t
 chest strap  --BLE-->  hr-bridge-ble  --HTTP-->  hr-osc  --OSC-->  VRChat
 ```
 
-No extra hardware, no phone app in the middle, no account anywhere. If your PC
+There's no phone app in the middle and no account to make. If your PC
 has no usable Bluetooth, use [hr-bridge-pico](https://github.com/RealWhyKnot/hr-bridge-pico),
 which puts a Raspberry Pi Pico W in front of the strap instead.
 
@@ -123,7 +123,9 @@ The log is written to `bridge.log` under your platform's data directory:
 Templates for all three platforms are in `packaging/`, and in the `autostart`
 folder of the release zip.
 
-**Windows.** Put a shortcut to `start-hidden.vbs` in the Startup folder. Press
+### Windows
+
+Put a shortcut to `start-hidden.vbs` in the Startup folder. Press
 Win+R and enter `shell:startup` to open it. In the release zip the script is in
 `autostart`, one folder below `hr-bridge-ble.exe`; in a clone it is in
 `packaging`, one folder below the `.venv`. It finds either without being moved.
@@ -132,7 +134,9 @@ Moving the folder afterwards does break the logon start: the shortcut records th
 old path, and so does an editable install. Re-create the shortcut, and from a
 clone re-run `pip install -e .`.
 
-**macOS.** Edit `dev.whyknot.hr-bridge-ble.plist` to replace `USERNAME`, then:
+### macOS
+
+Edit `dev.whyknot.hr-bridge-ble.plist` to replace `USERNAME`, then:
 
 ```bash
 cp packaging/dev.whyknot.hr-bridge-ble.plist ~/Library/LaunchAgents/
@@ -142,7 +146,7 @@ launchctl load ~/Library/LaunchAgents/dev.whyknot.hr-bridge-ble.plist
 macOS will ask for Bluetooth permission the first time. If you never see the
 prompt, grant it under System Settings, Privacy and Security, Bluetooth.
 
-**Linux.**
+### Linux
 
 ```bash
 cp packaging/hr-bridge-ble.service ~/.config/systemd/user/
@@ -151,33 +155,47 @@ systemctl --user enable --now hr-bridge-ble
 
 ## When something is wrong
 
-**Read the log first.** It records every state change: what it connected to, the
+### Read the log first
+
+It records every state change: what it connected to, the
 first reading it saw, and every disconnect. Repeated failures are logged once
 rather than every few seconds, so a quiet log means nothing has changed.
 
-**"waiting for a heart rate strap".** Most straps only advertise while worn
+### "waiting for a heart rate strap"
+
+Most straps only advertise while worn
 against skin. Put it on, moisten the contacts, and give it ten seconds. Run
 `--list` to confirm the computer can see it at all.
 
-**The strap is visible but will not connect.** A strap can only hold one
+### The strap is visible but will not connect
+
+A strap can only hold one
 connection. Close any phone app, watch, or bike computer that is paired to it.
 On Windows, also check that the strap is not paired in Settings, Bluetooth and
 devices; heart rate straps should be left unpaired for this.
 
-**"No Bluetooth adapter found".** The adapter is off or absent. On Windows check
+### "No Bluetooth adapter found"
+
+The adapter is off or absent. On Windows check
 Settings, Bluetooth and devices. On Linux check `bluetoothctl show` and that the
 `bluetooth` service is running. If the machine genuinely has no adapter, use
 [hr-bridge-pico](https://github.com/RealWhyKnot/hr-bridge-pico).
 
-**"no skin contact".** The strap is connected but reporting that it is not
+### "no skin contact"
+
+The strap is connected but reporting that it is not
 against skin, so the readings are meaningless and are dropped. Moisten the
 contact pads.
 
-**Nothing appears in hr-osc.** Confirm the log says `streaming, first bpm ...`.
+### Nothing appears in hr-osc
+
+Confirm the log says `streaming, first bpm ...`.
 If it does, the bridge is working and the problem is in hr-osc's configuration;
 go back to the hr-osc section above.
 
-**Linux permission errors.** Scanning normally works without root. If it does
+### Linux permission errors
+
+Scanning normally works without root. If it does
 not, your user needs to be allowed to talk to BlueZ over D-Bus; on most
 distributions that is automatic for a desktop session and missing in a bare
 container.
