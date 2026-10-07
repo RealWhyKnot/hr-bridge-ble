@@ -1,6 +1,6 @@
 # hr-bridge-ble
 
-Streams your heart rate into VRChat using the Bluetooth adapter your computer
+Streams your heart rate into VRChat through the Bluetooth adapter your computer
 already has. It connects to the chest strap directly and forwards each reading to
 [hr-osc](https://github.com/kamyu1537/hr-osc), which turns them into OSC for VRChat.
 
@@ -8,9 +8,9 @@ already has. It connects to the chest strap directly and forwards each reading t
 chest strap  --BLE-->  hr-bridge-ble  --HTTP-->  hr-osc  --OSC-->  VRChat
 ```
 
-There's no phone app in the middle and no account to make. If your PC
-has no usable Bluetooth, use [hr-bridge-pico](https://github.com/RealWhyKnot/hr-bridge-pico),
-which puts a Raspberry Pi Pico W in front of the strap instead.
+You don't need a phone app or an account. If your PC's Bluetooth won't do, use
+[hr-bridge-pico](https://github.com/RealWhyKnot/hr-bridge-pico), which puts a
+Raspberry Pi Pico W between the strap and the PC instead.
 
 ## Compatibility
 
@@ -23,17 +23,16 @@ which puts a Raspberry Pi Pico W in front of the strap instead.
 | Python | 3.10 or newer, or none at all if you use the Windows executable |
 | Consumer | hr-osc, or anything that accepts an HTTP POST holding a bare number |
 
-Bluetooth Classic headsets and ANT+ straps will not work. The strap has to speak
+Bluetooth Classic headsets and ANT+ straps won't work. The strap has to speak
 Bluetooth Low Energy, which almost every strap sold since about 2015 does.
 
 ## Install
 
-### Windows, no Python
+On Windows you can skip Python. Download the zip from
+[Releases](https://github.com/RealWhyKnot/hr-bridge-ble/releases), unpack it
+anywhere and run `hr-bridge-ble.exe`.
 
-Download the zip from [Releases](https://github.com/RealWhyKnot/hr-bridge-ble/releases),
-unpack it anywhere, and run `hr-bridge-ble.exe`.
-
-### macOS and Linux
+On macOS and Linux:
 
 ```bash
 pipx install https://github.com/RealWhyKnot/hr-bridge-ble/releases/latest/download/hr_bridge_ble-0.1.0-py3-none-any.whl
@@ -47,18 +46,18 @@ pip install -e .
 
 ## Running it
 
-Wear the strap, then:
+Put the strap on, then:
 
 ```bash
 hr-bridge-ble
 ```
 
-It scans, connects to the first heart rate strap it finds, and posts every
-reading to `http://127.0.0.1:8080`. It keeps scanning if the strap is not there
-yet, reconnects when the strap drops out, and keeps running if hr-osc is closed,
-so start order does not matter.
+It scans, connects to the first heart rate strap it finds and posts every reading
+to `http://127.0.0.1:8080`. If the strap isn't there yet it keeps scanning, and it
+reconnects when the strap drops out. It also keeps running while hr-osc is closed.
+Start them in either order.
 
-To see what is in range:
+To see what's in range:
 
 ```bash
 hr-bridge-ble --list
@@ -81,21 +80,21 @@ exact and skips the scan, which makes startup faster.
 
 ## Setting up hr-osc
 
-hr-osc defaults to a different heart rate source, so it ignores the bridge until
-you tell it to listen for HTTP. This is the single most common reason for a
-working bridge showing nothing.
+hr-osc uses a different heart rate source by default and ignores HTTP until you
+switch it over. When the bridge works but VRChat doesn't get a heart rate, that's
+nearly always why.
 
 1. Open hr-osc.
-2. On the **General** tab, set the service type to **HTTP**. It is on General, not
-   on the HTTP tab, which only holds the port.
-3. On the **HTTP** tab, confirm the port is `8080`.
-4. Check that OSC is pointed at `127.0.0.1:9000`, which is where VRChat listens.
+2. On the **General** tab, set the service type to HTTP. The setting is on General.
+   The HTTP tab only has the port.
+3. On the HTTP tab, check that the port is `8080`.
+4. Check that OSC points at `127.0.0.1:9000`, where VRChat listens.
 
-The config file is at `%APPDATA%\me.kamyu.hr-osc\data\config.json` on Windows if
-you would rather edit it directly. The field is `service_type` and it must be
+If you'd rather edit the config file, it's at
+`%APPDATA%\me.kamyu.hr-osc\data\config.json` on Windows. Set `service_type` to
 `"http"`.
 
-VRChat also needs OSC switched on: in the radial menu, Options, OSC, Enabled.
+VRChat needs OSC switched on too: in the radial menu, Options, OSC, Enabled.
 
 ## Options
 
@@ -112,7 +111,7 @@ VRChat also needs OSC switched on: in the radial menu, Options, OSC, Enabled.
 --version                 print the version and exit
 ```
 
-The log is written to `bridge.log` under your platform's data directory:
+The log is `bridge.log` in your platform's data directory:
 
 - Windows: `%LOCALAPPDATA%\hr-bridge-ble\bridge.log`
 - macOS: `~/Library/Application Support/hr-bridge-ble/bridge.log`
@@ -120,19 +119,19 @@ The log is written to `bridge.log` under your platform's data directory:
 
 ## Starting it automatically
 
-Templates for all three platforms are in `packaging/`, and in the `autostart`
+Templates for all three platforms are in `packaging/` and in the `autostart`
 folder of the release zip.
 
 ### Windows
 
-Put a shortcut to `start-hidden.vbs` in the Startup folder. Press
-Win+R and enter `shell:startup` to open it. In the release zip the script is in
-`autostart`, one folder below `hr-bridge-ble.exe`; in a clone it is in
-`packaging`, one folder below the `.venv`. It finds either without being moved.
+Put a shortcut to `start-hidden.vbs` in the Startup folder (Win+R, then
+`shell:startup`). In the release zip the script is in `autostart`, one folder
+below `hr-bridge-ble.exe`. In a clone it's in `packaging`, one folder below the
+`.venv`. It finds either one without being moved.
 
-Moving the folder afterwards does break the logon start: the shortcut records the
-old path, and so does an editable install. Re-create the shortcut, and from a
-clone re-run `pip install -e .`.
+If you move the folder afterwards, the logon start breaks. The shortcut still
+has the old path, and so does an editable install. Re-create the shortcut, and
+in a clone run `pip install -e .` again.
 
 ### macOS
 
@@ -143,8 +142,8 @@ cp packaging/dev.whyknot.hr-bridge-ble.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/dev.whyknot.hr-bridge-ble.plist
 ```
 
-macOS will ask for Bluetooth permission the first time. If you never see the
-prompt, grant it under System Settings, Privacy and Security, Bluetooth.
+macOS asks for Bluetooth permission the first time. If the prompt never shows
+up, grant it under System Settings, Privacy and Security, Bluetooth.
 
 ### Linux
 
@@ -155,50 +154,45 @@ systemctl --user enable --now hr-bridge-ble
 
 ## When something is wrong
 
-### Read the log first
-
-It records every state change: what it connected to, the
-first reading it saw, and every disconnect. Repeated failures are logged once
-rather than every few seconds, so a quiet log means nothing has changed.
+Read the log first. It records every state change: what it connected to, the
+first reading it saw, and every disconnect. If the same failure keeps happening
+it's logged once instead of every few seconds. A log with no new lines means the
+state hasn't changed.
 
 ### "waiting for a heart rate strap"
 
-Most straps only advertise while worn
-against skin. Put it on, moisten the contacts, and give it ten seconds. Run
-`--list` to confirm the computer can see it at all.
+Most straps only advertise while they're against skin. Put it on, wet the
+contacts and give it ten seconds, then run `--list` to check that the computer
+can see it at all.
 
-### The strap is visible but will not connect
+### The strap is visible but won't connect
 
-A strap can only hold one
-connection. Close any phone app, watch, or bike computer that is paired to it.
-On Windows, also check that the strap is not paired in Settings, Bluetooth and
-devices; heart rate straps should be left unpaired for this.
+A strap holds one connection at a time. Close any phone app, watch or bike
+computer that's paired to it. On Windows, also make sure the strap isn't paired
+in Settings, Bluetooth and devices. Leave heart rate straps unpaired for this.
 
 ### "No Bluetooth adapter found"
 
-The adapter is off or absent. On Windows check
-Settings, Bluetooth and devices. On Linux check `bluetoothctl show` and that the
-`bluetooth` service is running. If the machine genuinely has no adapter, use
+The adapter is off or missing. On Windows check Settings, Bluetooth and devices.
+On Linux check `bluetoothctl show` and that the `bluetooth` service is running.
+If the machine has no adapter, use
 [hr-bridge-pico](https://github.com/RealWhyKnot/hr-bridge-pico).
 
 ### "no skin contact"
 
-The strap is connected but reporting that it is not
-against skin, so the readings are meaningless and are dropped. Moisten the
-contact pads.
+The strap is connected but says it isn't against skin. Those readings are wrong
+and the bridge drops them. Wet the contact pads.
 
-### Nothing appears in hr-osc
+### hr-osc gets nothing
 
-Confirm the log says `streaming, first bpm ...`.
-If it does, the bridge is working and the problem is in hr-osc's configuration;
-go back to the hr-osc section above.
+Check that the log says `streaming, first bpm ...`. If it does, the bridge is
+working and hr-osc needs setting up. Go back to the hr-osc section above.
 
 ### Linux permission errors
 
-Scanning normally works without root. If it does
-not, your user needs to be allowed to talk to BlueZ over D-Bus; on most
-distributions that is automatic for a desktop session and missing in a bare
-container.
+Scanning normally works without root. If it doesn't, your user needs permission
+to talk to BlueZ over D-Bus. Most distributions give a desktop session that by
+default, and a bare container doesn't have it.
 
 ## Development
 
@@ -210,13 +204,12 @@ python -m ruff check .
 python -m unittest discover
 ```
 
-Tests use only the standard library, mock out the Bluetooth layer, and never
-touch hardware, so they run anywhere.
+The tests only use the standard library and mock the Bluetooth layer. They run
+without any hardware.
 
-The interesting part is `src/hr_bridge_ble/hr_parse.py`, which decodes the
-Bluetooth Heart Rate Measurement characteristic: 8 or 16 bit rate, skin contact,
-energy expended, and RR intervals. It is a pure function and is tested against
-byte vectors for each of those.
+`src/hr_bridge_ble/hr_parse.py` decodes the Bluetooth Heart Rate Measurement
+characteristic: 8 or 16 bit rate, skin contact, energy expended and RR
+intervals.
 
 Releases are cut by pushing a `vYYYY.M.D.N` tag. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

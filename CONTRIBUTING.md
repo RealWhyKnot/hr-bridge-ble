@@ -1,6 +1,6 @@
 # Contributing
 
-## Getting set up
+To set up a development copy:
 
 ```bash
 python -m venv .venv
@@ -18,7 +18,7 @@ subject that ends up with more than one stamp.
 
 ## Checks
 
-These three run in CI on Windows, macOS and Linux, against Python 3.10 and 3.13.
+CI runs these three on Windows, macOS and Linux, against Python 3.10 and 3.13.
 Run them before opening a pull request:
 
 ```bash
@@ -27,12 +27,12 @@ python -m ruff check .
 python -m unittest discover
 ```
 
-Nothing in the test suite touches hardware, so a failure is a real failure.
+The tests don't need any hardware, and a failure means a real bug.
 
 ## Commits
 
-Conventional subjects: `type(scope): description`. Keep them one line unless the
-change needs context that the subject cannot carry.
+Conventional subjects: `type(scope): description`. Keep them to one line unless
+the change needs context the subject can't hold.
 
 ## Releases
 
